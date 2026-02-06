@@ -12,18 +12,33 @@ const productList = document.getElementById("product-list");
 const cartList = document.getElementById("cart-list");
 const clearCartBtn = document.getElementById("clear-cart-btn");
 
-// ✅ ALWAYS return an array (Cypress-proof)
+// ---------- STORAGE HELPERS ----------
+
+// Restore sessionStorage from localStorage if needed
+function restoreCart() {
+  const sessionCart = sessionStorage.getItem("cart");
+  const backupCart = localStorage.getItem("cartBackup");
+
+  if (!sessionCart && backupCart) {
+    sessionStorage.setItem("cart", backupCart);
+  }
+}
+
+// Always return an array
 function getCart() {
   const cart = sessionStorage.getItem("cart");
   return cart ? JSON.parse(cart) : [];
 }
 
-// Save cart to sessionStorage
+// Save to BOTH storages
 function saveCart(cart) {
-  sessionStorage.setItem("cart", JSON.stringify(cart));
+  const data = JSON.stringify(cart);
+  sessionStorage.setItem("cart", data);
+  localStorage.setItem("cartBackup", data);
 }
 
-// Render product list
+// ---------- UI RENDERING ----------
+
 function renderProducts() {
   productList.innerHTML = "";
 
@@ -37,7 +52,6 @@ function renderProducts() {
   });
 }
 
-// Render cart list
 function renderCart() {
   const cart = getCart();
   cartList.innerHTML = "";
@@ -49,9 +63,10 @@ function renderCart() {
   });
 }
 
-// Add item to cart
+// ---------- CART ACTIONS ----------
+
 function addToCart(productId) {
-  const cart = getCart(); // always an array
+  const cart = getCart();
   const product = products.find((p) => p.id === productId);
 
   cart.push(product);
@@ -59,13 +74,13 @@ function addToCart(productId) {
   renderCart();
 }
 
-// Clear cart
 function clearCart() {
   saveCart([]);
   renderCart();
 }
 
-// Event delegation for Add to Cart buttons
+// ---------- EVENTS ----------
+
 productList.addEventListener("click", (e) => {
   if (e.target.tagName === "BUTTON") {
     const productId = parseInt(e.target.dataset.id);
@@ -73,9 +88,10 @@ productList.addEventListener("click", (e) => {
   }
 });
 
-// Clear cart button
 clearCartBtn.addEventListener("click", clearCart);
 
-// Initial render
+// ---------- INIT ----------
+
+restoreCart();
 renderProducts();
 renderCart();
