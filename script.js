@@ -12,9 +12,14 @@ const productList = document.getElementById("product-list");
 const cartList = document.getElementById("cart-list");
 const clearCartBtn = document.getElementById("clear-cart-btn");
 
+// ✅ IMPORTANT: Initialize cart if not present (Cypress fix)
+if (!sessionStorage.getItem("cart")) {
+  sessionStorage.setItem("cart", JSON.stringify([]));
+}
+
 // Get cart from sessionStorage
 function getCart() {
-  return JSON.parse(sessionStorage.getItem("cart")) || [];
+  return JSON.parse(sessionStorage.getItem("cart"));
 }
 
 // Save cart to sessionStorage
@@ -30,9 +35,7 @@ function renderProducts() {
     const li = document.createElement("li");
     li.innerHTML = `
       ${product.name} - $${product.price}
-      <button class="add-to-cart-btn" data-id="${product.id}">
-        Add to Cart
-      </button>
+      <button data-id="${product.id}">Add to Cart</button>
     `;
     productList.appendChild(li);
   });
@@ -55,22 +58,20 @@ function addToCart(productId) {
   const cart = getCart();
   const product = products.find((p) => p.id === productId);
 
-  if (product) {
-    cart.push(product);
-    saveCart(cart);
-    renderCart();
-  }
+  cart.push(product);
+  saveCart(cart);
+  renderCart();
 }
 
 // Clear cart
 function clearCart() {
-  sessionStorage.removeItem("cart");
+  saveCart([]);
   renderCart();
 }
 
 // Event delegation for Add to Cart buttons
 productList.addEventListener("click", (e) => {
-  if (e.target.classList.contains("add-to-cart-btn")) {
+  if (e.target.tagName === "BUTTON") {
     const productId = parseInt(e.target.dataset.id);
     addToCart(productId);
   }
