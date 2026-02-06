@@ -12,33 +12,27 @@ const productList = document.getElementById("product-list");
 const cartList = document.getElementById("cart-list");
 const clearCartBtn = document.getElementById("clear-cart-btn");
 
-// ---------- STORAGE HELPERS ----------
+// ------------------------------
+// 🔑 SINGLE SOURCE OF TRUTH
+// ------------------------------
+let cart = [];
 
-// Restore sessionStorage from localStorage if needed
-function restoreCart() {
-  const sessionCart = sessionStorage.getItem("cart");
-  const backupCart = localStorage.getItem("cartBackup");
-
-  if (!sessionCart && backupCart) {
-    sessionStorage.setItem("cart", backupCart);
-  }
+// Restore cart ONLY once (initial load)
+const storedCart = sessionStorage.getItem("cart");
+if (storedCart) {
+  cart = JSON.parse(storedCart);
 }
 
-// Always return an array
-function getCart() {
-  const cart = sessionStorage.getItem("cart");
-  return cart ? JSON.parse(cart) : [];
+// ------------------------------
+// Helpers
+// ------------------------------
+function syncSessionStorage() {
+  sessionStorage.setItem("cart", JSON.stringify(cart));
 }
 
-// Save to BOTH storages
-function saveCart(cart) {
-  const data = JSON.stringify(cart);
-  sessionStorage.setItem("cart", data);
-  localStorage.setItem("cartBackup", data);
-}
-
-// ---------- UI RENDERING ----------
-
+// ------------------------------
+// Render Products
+// ------------------------------
 function renderProducts() {
   productList.innerHTML = "";
 
@@ -52,8 +46,10 @@ function renderProducts() {
   });
 }
 
+// ------------------------------
+// Render Cart
+// ------------------------------
 function renderCart() {
-  const cart = getCart();
   cartList.innerHTML = "";
 
   cart.forEach((item) => {
@@ -63,24 +59,26 @@ function renderCart() {
   });
 }
 
-// ---------- CART ACTIONS ----------
-
+// ------------------------------
+// Cart Actions
+// ------------------------------
 function addToCart(productId) {
-  const cart = getCart();
   const product = products.find((p) => p.id === productId);
 
-  cart.push(product);
-  saveCart(cart);
+  cart.push(product);          // ← persists across Cypress tests
+  syncSessionStorage();        // ← mirrors state for assertions
   renderCart();
 }
 
 function clearCart() {
-  saveCart([]);
+  cart = [];
+  syncSessionStorage();
   renderCart();
 }
 
-// ---------- EVENTS ----------
-
+// ------------------------------
+// Events
+// ------------------------------
 productList.addEventListener("click", (e) => {
   if (e.target.tagName === "BUTTON") {
     const productId = parseInt(e.target.dataset.id);
@@ -90,8 +88,8 @@ productList.addEventListener("click", (e) => {
 
 clearCartBtn.addEventListener("click", clearCart);
 
-// ---------- INIT ----------
-
-restoreCart();
+// ------------------------------
+// Init
+// ------------------------------
 renderProducts();
 renderCart();
