@@ -12,14 +12,10 @@ const productList = document.getElementById("product-list");
 const cartList = document.getElementById("cart-list");
 const clearCartBtn = document.getElementById("clear-cart-btn");
 
-// ✅ IMPORTANT: Initialize cart if not present (Cypress fix)
-if (!sessionStorage.getItem("cart")) {
-  sessionStorage.setItem("cart", JSON.stringify([]));
-}
-
-// Get cart from sessionStorage
+// ✅ ALWAYS return an array (Cypress-proof)
 function getCart() {
-  return JSON.parse(sessionStorage.getItem("cart"));
+  const cart = sessionStorage.getItem("cart");
+  return cart ? JSON.parse(cart) : [];
 }
 
 // Save cart to sessionStorage
@@ -55,7 +51,7 @@ function renderCart() {
 
 // Add item to cart
 function addToCart(productId) {
-  const cart = getCart();
+  const cart = getCart(); // always an array
   const product = products.find((p) => p.id === productId);
 
   cart.push(product);
